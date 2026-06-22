@@ -9,5 +9,6 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RickAndMortyResponseDto {
+    private InfoDto info;
     private List<CreateCharacterRequestDto> results;
 }

@@ -17,37 +17,56 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class DataLoader {
 
-    private static final String API_URL = "https://rickandmortyapi.com/api/character";
+    private static final String START_API_URL = "https://rickandmortyapi.com/api/character";
 
     private final CharacterService service;
     private final ObjectMapper objectMapper;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadContent() {
+        HttpClient httpClient = HttpClient.newHttpClient();
+        String nextUrl = START_API_URL;
+
         try {
-            HttpClient httpClient = HttpClient.newHttpClient();
+            while (nextUrl != null && !nextUrl.isEmpty()) {
+                HttpRequest getRequest = HttpRequest.newBuilder()
+                        .GET()
+                        .uri(URI.create(nextUrl))
+                        .build();
 
-            HttpRequest getRequest = HttpRequest.newBuilder()
-                    .GET()
-                    .uri(URI.create(API_URL))
-                    .build();
+                HttpResponse<String> response =
+                        httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
 
-            HttpResponse<String> response =
-                    httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() != 200) {
+                    throw new RuntimeException("API returned error status: "
+                            + response.statusCode() + " Body: " + response.body());
+                }
 
-            RickAndMortyResponseDto apiResponse = objectMapper.readValue(
-                    response.body(),
-                    RickAndMortyResponseDto.class
-            );
+                RickAndMortyResponseDto apiResponse = objectMapper.readValue(
+                        response.body(),
+                        RickAndMortyResponseDto.class
+                );
 
-            if (apiResponse != null && apiResponse.getResults() != null) {
-                for (CreateCharacterRequestDto requestDto : apiResponse.getResults()) {
-                    service.save(requestDto);
+                if (apiResponse != null && apiResponse.getResults() != null) {
+                    for (CreateCharacterRequestDto requestDto : apiResponse.getResults()) {
+                        service.save(requestDto);
+                    }
+
+                    nextUrl = apiResponse.getInfo()
+                            != null ? apiResponse.getInfo().getNext() : null;
+
+                    if (nextUrl != null) {
+                        Thread.sleep(500);
+                    }
+                } else {
+                    break;
                 }
             }
-        } catch (IOException | InterruptedException e) {
-            Thread.currentThread().interrupt();
+        } catch (IOException e) {
             throw new RuntimeException("Failed to load and parse character data", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Data loading was interrupted", e);
         }
     }
 }
