@@ -6,7 +6,7 @@ import mate.academy.rickandmorty.dto.CreateCharacterRequestDto;
 
 public interface CharacterService {
 
-    CharacterDto save(CreateCharacterRequestDto requestDto);
+    void save(CreateCharacterRequestDto requestDto);
 
     CharacterDto getRandomCharacter();
 

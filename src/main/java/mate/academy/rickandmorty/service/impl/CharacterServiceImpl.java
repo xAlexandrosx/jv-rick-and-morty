@@ -1,6 +1,7 @@
 package mate.academy.rickandmorty.service.impl;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import lombok.AllArgsConstructor;
 import mate.academy.rickandmorty.dto.CharacterDto;
@@ -19,9 +20,9 @@ public class CharacterServiceImpl implements CharacterService {
     private final CharacterMapper mapper;
 
     @Override
-    public CharacterDto save(CreateCharacterRequestDto requestDto) {
+    public void save(CreateCharacterRequestDto requestDto) {
         CharacterModel saved = repository.save(mapper.toEntity(requestDto));
-        return mapper.toDto(saved);
+        mapper.toDto(saved);
     }
 
     @Override
@@ -35,7 +36,7 @@ public class CharacterServiceImpl implements CharacterService {
             return mapper.toDto(all.get(randomIndex));
         }
 
-        return null;
+        throw new NoSuchElementException("Database is empty.");
     }
 
     @Override
