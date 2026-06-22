@@ -2,6 +2,8 @@
 
 ### Business requirements
 
+`mvn clean package`
+
 - Task: Create API. It should contain two methods:
 
 1. The request randomly generates a wiki about one character in the universe the animated series Rick & Morty.
